@@ -1,0 +1,6 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~robotname" : \b [str] The name of the robot. min: , default: noname, max: 
+

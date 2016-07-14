@@ -1,0 +1,26 @@
+bool bring
+float32 x_coord_bring
+float32 y_coord_bring
+float32 orientation_bring
+
+bool get
+int8 april_tag_number_get
+
+bool bringback
+int8 april_tag_number_bringback
+
+bool diceroll
+
+
+bool move
+float32 x_coord
+float32 y_coord
+float32 orientation
+
+bool grip
+int8 april_tag_number
+
+bool carry
+
+---
+bool success

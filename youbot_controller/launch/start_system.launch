@@ -1,0 +1,15 @@
+<launch>
+
+<include file="$(find youbot_driver_ros_interface)/launch/youbot_driver.launch"/>
+<include file="$(find youbot_2d_navigation)/youbot_configuration.launch"/>
+<include file="$(find youbot_2d_navigation)/move_base.launch"/>
+
+<include file="$(find youbot_controller)/launch/sync.launch"/>
+
+<include file="$(find youbot_tf_setup)/launch/tf.launch"/>
+
+<include file="$(find ar_track_alvar)/launch/youbot.launch"/>
+
+<include file="$(find industry_comm)/launch/comm.launch"/>
+
+</launch>

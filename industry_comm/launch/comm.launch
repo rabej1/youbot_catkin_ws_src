@@ -1,0 +1,21 @@
+<launch>
+
+  <node pkg="youbot_arm_server" type="youbot_arm_server" name="youbot_arm_server" output="screen" >
+       
+  </node>
+
+  <node pkg="industry_comm" type="task_manager" name="task_manager_youbot" >
+	<rosparam command="load" file="$(find industry_comm)/params/robot_params.yaml" />
+  </node>
+
+  <node pkg="industry_comm" type="task_publisher_server" name="task_publisher_youbot" output="screen">
+	<rosparam command="load" file="$(find industry_comm)/params/robot_name_params.yaml" />
+  </node>
+
+<node pkg="industry_comm" type="task_processor" name="task_processor_youbot" output="screen">
+
+  </node>
+
+
+</launch>
+

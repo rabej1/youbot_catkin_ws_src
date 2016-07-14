@@ -1,0 +1,10 @@
+#goal definition
+geometry_msgs/PoseStamped goal
+float32 gripperposstart
+float32 gripperposend
+---
+#result definition
+bool success
+---
+#feedback
+geometry_msgs/PoseStamped current_pose

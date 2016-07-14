@@ -1,0 +1,10 @@
+\subsubsection usage Usage
+\verbatim
+<node name="industry_comm" pkg="industry_comm" type="industry_comm">
+  <param name="robotname" type="str" value="noname" />
+  <param name="carry" type="bool" value="False" />
+  <param name="roboticarm" type="bool" value="False" />
+  <param name="move" type="bool" value="False" />
+</node>
+\endverbatim
+

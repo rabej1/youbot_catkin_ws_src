@@ -1,0 +1,18 @@
+uint8 task_ID
+string client_ID
+string robot_ID
+
+uint8 priority
+
+bool bring
+float32 x_coord_bring
+float32 y_coord_bring
+float32 orientation_bring
+
+bool get
+int8 april_tag_number_get
+
+bool bringback
+int8 april_tag_number_bringback
+
+bool diceroll

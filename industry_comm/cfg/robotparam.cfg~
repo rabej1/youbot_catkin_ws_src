@@ -1,0 +1,17 @@
+# Configuration for Robots abilities
+
+PACKAGE='industry_comm'
+#import roslib; 
+#roslib.load_manifest(PACKAGE)
+
+from dynamic_reconfigure.parameter_generator import *
+
+gen = ParameterGenerator()
+
+#       Name       	Type      Level Description     					Default 	Min   Max
+gen.add("robotname", 	str_t,    0,    "The name of the robot.", 				"noname")
+gen.add("carry",       	bool_t,   0,    "If the Robot can carry around things.", 		False)
+gen.add("roboticarm",  	bool_t,   0,    "If the Robot has a Robotc Arm to pick up things.", 	False)
+gen.add("move",       	bool_t,   0,    "If the Robot can move.", 				False)
+
+exit(gen.generate(PACKAGE, "industry_comm", "robotparam"))

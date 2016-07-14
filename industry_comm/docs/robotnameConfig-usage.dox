@@ -1,0 +1,7 @@
+\subsubsection usage Usage
+\verbatim
+<node name="industry_comm" pkg="industry_comm" type="industry_comm">
+  <param name="robotname" type="str" value="noname" />
+</node>
+\endverbatim
+

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package>
+  <name>industry_comm_msg</name>
+  <version>0.0.1</version>
+  <description>The industry_comm_msg package</description>
+
+  <maintainer email="raeber.jonas@gmail.com">Jonas Räber</maintainer>
+
+  <license>BSD</license>
+
+  <!-- <url type="website">http://wiki.ros.org/industry_comm_msg</url> -->
+
+  <author email="raeber.jonas@gmail.com">Jonas Räber</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

@@ -1,0 +1,9 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~robotname" : \b [str] The name of the robot. min: , default: noname, max: 
+- \b "~carry" : \b [bool] If the Robot can carry around things. min: False, default: False, max: True
+- \b "~roboticarm" : \b [bool] If the Robot has a Robotc Arm to pick up things. min: False, default: False, max: True
+- \b "~move" : \b [bool] If the Robot can move. min: False, default: False, max: True
+

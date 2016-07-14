@@ -1,0 +1,206 @@
+#include "ros/ros.h"
+#include "industry_comm_msg/TaskProcessor.h"
+
+#include <tf/transform_listener.h>
+
+#include <move_base_msgs/MoveBaseAction.h>
+#include <youbot_arm_server/YouBotGoalAction.h>
+#include <actionlib/client/simple_action_client.h>
+
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<youbot_arm_server::YouBotGoalAction> ArmClient;
+
+move_base_msgs::MoveBaseGoal goal;
+
+//static const std::string apriltagtf[] = {"ar_marker_1","ar_marker_2","ar_marker_3","ar_marker_4","ar_marker_5","ar_marker_6","ar_marker_7","ar_marker_8","ar_marker_9"};
+std::stringstream apriltagtf;
+
+class Processor {
+
+protected:
+
+	ros::NodeHandle nh_;
+	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac_;
+	actionlib::SimpleActionClient<youbot_arm_server::YouBotGoalAction> ac_arm_;
+	ros::Subscriber sub;
+	ros::ServiceServer service;
+	std::string action_name_;
+	tf::TransformListener listener;
+
+public:
+
+	move_base_msgs::MoveBaseGoal goal;
+	youbot_arm_server::YouBotGoalGoal arm_goal;
+
+
+	Processor(std::string name):
+		ac_("move_base", true),
+		ac_arm_("move_arm", true),
+		action_name_(name) {
+
+		service = nh_.advertiseService("TaskProcessor", &Processor::task, this);
+
+		ros::AsyncSpinner spinner(1);
+		spinner.start();
+	}
+
+
+	void publishArmPos(youbot_arm_server::YouBotGoalGoal gripgoal){
+		while(!ac_arm_.waitForServer(ros::Duration(5.0))){
+			ROS_INFO("Waiting for the arm server to come up");
+		}
+		ac_arm_.sendGoal(gripgoal);
+		ac_arm_.waitForResult();
+		if(ac_arm_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+			ROS_INFO("Hooray, the arm reached its destination!");
+		else
+			ROS_INFO("The Arm failed to reach the goal");
+	}
+
+	bool task(industry_comm_msg::TaskProcessor::Request  &req,
+			industry_comm_msg::TaskProcessor::Response &res)
+	{
+		bool foundtag = false;
+		int pos = 0;
+		//moving the Robot to the given Position
+		if(req.move){
+			ROS_INFO("Move to position x: [%f], y: [%f]", req.x_coord, req.y_coord);
+
+			goal.target_pose.header.frame_id = "map";
+			goal.target_pose.header.stamp = ros::Time::now();
+
+			goal.target_pose.pose.position.x = req.x_coord;
+			goal.target_pose.pose.position.y = req.y_coord;
+			goal.target_pose.pose.orientation.z = req.orientation;
+			goal.target_pose.pose.orientation.x = 0;
+			goal.target_pose.pose.orientation.y = 0;
+			goal.target_pose.pose.orientation.w = sqrt(1-pow(req.orientation,2));
+
+			while(!ac_.waitForServer(ros::Duration(5.0))){
+				ROS_INFO("Waiting for the move_base action server to come up");
+			}
+			ac_.sendGoal(goal);
+
+			ac_.waitForResult();
+			if(ac_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
+				ROS_INFO("Hooray, the base moved to the desired goal");
+			else
+				ROS_INFO("The base failed to move to goal for some reason");
+		}
+
+		//Pick up the object with the given April-Tag
+		if(req.grip){
+			ROS_INFO("Pick up object with april-tag number: [%d]", req.april_tag_number);
+
+			tf::StampedTransform transform;
+
+			int apriltagnbr = req.april_tag_number;
+			apriltagtf.clear();
+			apriltagtf << "ar_marker_" << (apriltagnbr);
+			ROS_INFO("April TF Name: %s", apriltagtf.str().c_str());
+
+			arm_goal.goal.pose.orientation.x = 0;
+			arm_goal.goal.pose.orientation.y = -1.2;
+			arm_goal.goal.pose.orientation.z = 0.2;
+			arm_goal.goal.pose.orientation.w = 1;
+			
+
+			arm_goal.gripperposstart = -1;
+			arm_goal.gripperposend = -1;
+
+			while ((foundtag == false) && (pos < 3)){
+				switch (pos){
+				case 0:
+					arm_goal.goal.pose.position.x = 0.17;
+					arm_goal.goal.pose.position.y = 0.19;
+					arm_goal.goal.pose.position.z = 0.25;
+					break;
+				case 1:
+					arm_goal.goal.pose.position.x = 0.36;
+					arm_goal.goal.pose.position.y = 0;
+					arm_goal.goal.pose.position.z = 0.25;
+					break;
+				case 2:
+					arm_goal.goal.pose.position.x = 0.17;
+					arm_goal.goal.pose.position.y = -0.19;
+					arm_goal.goal.pose.position.z = 0.25;
+					break;
+				default:
+					ROS_INFO("No Tag found");
+				}
+				++pos;
+				arm_goal.goal.header.stamp = ros::Time::now();
+				publishArmPos(arm_goal);
+				sleep(5);
+
+				
+				try {
+					listener.waitForTransform("/base_footprint", apriltagtf.str(), ros::Time(0), ros::Duration(5.0) );
+					listener.lookupTransform("/base_footprint", apriltagtf.str(), ros::Time(0), transform);
+					foundtag = true;
+				} catch (tf::TransformException ex) {
+					ROS_ERROR("%s",ex.what());
+					foundtag = false;
+				}
+			}
+
+			ROS_INFO("Tag Position x: [%f], y: [%f], z: [%f]", transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z());
+			ROS_INFO("Tag Orientation x: [%f], y: [%f], z: [%f], w: [%f]", transform.getRotation().x(), transform.getRotation().y(), transform.getRotation().z(), transform.getRotation().w());
+
+			if (foundtag){
+				arm_goal.goal.pose.position.x = transform.getOrigin().x();
+				arm_goal.goal.pose.position.y = transform.getOrigin().y();
+				arm_goal.goal.pose.position.z = transform.getOrigin().z()+0.15;
+				arm_goal.goal.pose.orientation.x = 0;
+				arm_goal.goal.pose.orientation.y = -1.5;
+				arm_goal.goal.pose.orientation.z = transform.getRotation().z()+0.78;
+				arm_goal.goal.pose.orientation.w = 1;
+				arm_goal.goal.header.stamp = ros::Time::now();
+
+				arm_goal.gripperposstart = 0.011;
+				arm_goal.gripperposend = -1;
+
+				publishArmPos(arm_goal);
+				sleep(5);
+
+				arm_goal.goal.pose.position.z = arm_goal.goal.pose.position.z-0.04;
+				arm_goal.gripperposend = 0;
+
+				publishArmPos(arm_goal);
+				sleep(5);
+			}
+		}
+
+		//Place the Object at the back
+		if(req.carry){
+			arm_goal.goal.pose.position.x = -0.04;
+			arm_goal.goal.pose.position.y = 0;
+			arm_goal.goal.pose.position.z = 0.18;
+			arm_goal.goal.pose.orientation.x = 0;
+			arm_goal.goal.pose.orientation.y = -1.57;
+			arm_goal.goal.pose.orientation.z = 3;
+			arm_goal.goal.pose.orientation.w = 0;
+			arm_goal.gripperposstart = -1;
+			arm_goal.gripperposend = 0.011;
+
+			arm_goal.goal.header.stamp = ros::Time::now();
+
+			publishArmPos(arm_goal);
+			sleep(5);
+		}
+		res.success = true;
+		return true;
+	}
+
+};
+
+int main(int argc, char **argv)
+{
+	ros::init(argc, argv, "TaskProcessor");
+
+	Processor task_processor(ros::this_node::getName());
+
+	ros::spin();
+
+	return 0;
+}

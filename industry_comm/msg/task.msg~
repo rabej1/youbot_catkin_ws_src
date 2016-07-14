@@ -1,0 +1,13 @@
+##include <industry_comm/tasktype.h>
+
+##industry_comm/TaskType bla
+
+int task_ID
+double x_coord
+double y_coord
+std::string client_ID
+bool mobile
+bool roboticarm
+bool carry
+int priority
+std::string robot_ID
